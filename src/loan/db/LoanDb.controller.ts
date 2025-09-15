@@ -77,9 +77,13 @@ export class LoanDbController {
   @Get('requests')
   async getLoanRequests() {
     try {
-      return await this.loanDbService.getAllLoansByStatus(
+      const loans = await this.loanDbService.getAllLoansByStatus(
         LoanStatusEnum.PENDING,
       );
+      return {
+        success: true,
+        data: { loans },
+      };
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : 'Unknown error occurred';
