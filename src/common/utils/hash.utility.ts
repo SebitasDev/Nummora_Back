@@ -8,13 +8,13 @@ import { keccak256, encodePacked } from 'viem';
  * @param expectedHash - Hash que debe coincidir
  */
 export function validateHash(
-    solidityTypes: string[],
-    values: unknown[],
-    expectedHash: `0x${string}`,
+  solidityTypes: string[],
+  values: unknown[],
+  expectedHash: `0x${string}`,
 ): boolean {
-    const recalculatedHash = keccak256(
-        encodePacked(solidityTypes as any, values as any),
-    );
+  const recalculatedHash = keccak256(
+    encodePacked(solidityTypes as any, values as any),
+  );
 
-    return recalculatedHash.toLowerCase() === expectedHash.toLowerCase();
+  return recalculatedHash.toLowerCase() === expectedHash.toLowerCase();
 }
