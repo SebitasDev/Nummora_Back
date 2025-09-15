@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
   HttpException,
   HttpStatus,
   Post,
@@ -11,6 +12,7 @@ import { CreateLoanDto } from './types/createLoanDto';
 import { GenerateLoanDto } from './types/generateLoan.dto';
 import { LoanDbService } from './loanDb.service';
 import { LoanStatusEnum } from './enums/loanStatus.enum';
+import { ApiResponse } from '../../common/interfaces/api-response.interface';
 
 @Controller('loan')
 export class LoanDbController {
@@ -19,28 +21,56 @@ export class LoanDbController {
     private readonly loanDbService: LoanDbService,
   ) {}
   @Post('finance')
-  async financeLoan(@Body() payload: CreateLoanDto) {
+  @HttpCode(HttpStatus.CREATED)
+  async financeLoan(
+    @Body() payload: CreateLoanDto,
+  ): Promise<ApiResponse<{ txHash: string | null }>> {
     try {
       const result = await this.loanBlockchainService.financeLoan(payload);
       return {
-        message: 'Prestamo financiado correctamente ✅',
-        txHash: result,
+        success: true,
+        message: 'Préstamo financiado con éxito ✅',
+        data: { txHash: result },
       };
-    } catch (err) {
-      throw new HttpException({ error: err.error }, HttpStatus.BAD_REQUEST);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Unknown error occurred';
+
+      throw new HttpException(
+        <ApiResponse>{
+          success: false,
+          message: 'Error al generar el préstamo ❌',
+          error: errorMessage,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
   @Post('generate')
-  async generateLoan(@Body() payload: GenerateLoanDto) {
+  @HttpCode(HttpStatus.OK)
+  async generateLoan(
+    @Body() payload: GenerateLoanDto,
+  ): Promise<ApiResponse<{ txHash: string | null }>> {
     try {
       const result = await this.loanBlockchainService.generateLoan(payload);
       return {
+        success: true,
         message: result.message,
-        txHash: result.txHash,
+        data: { txHash: result.txHash },
       };
-    } catch (err) {
-      throw new HttpException({ error: err.message }, HttpStatus.BAD_REQUEST);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Unknown error occurred';
+
+      throw new HttpException(
+        <ApiResponse>{
+          success: false,
+          message: 'Error al generar el préstamo ❌',
+          error: errorMessage,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -50,8 +80,18 @@ export class LoanDbController {
       return await this.loanDbService.getAllLoansByStatus(
         LoanStatusEnum.PENDING,
       );
-    } catch (err) {
-      throw new HttpException({ error: err.message }, HttpStatus.BAD_REQUEST);
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Unknown error occurred';
+
+      throw new HttpException(
+        <ApiResponse>{
+          success: false,
+          message: 'Error al generar el préstamo ❌',
+          error: errorMessage,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }
