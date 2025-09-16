@@ -82,7 +82,7 @@ export class LoanDbController {
       );
       return {
         success: true,
-        data: { loans },
+        data: loans,
       };
     } catch (err: unknown) {
       const errorMessage =
