@@ -5,34 +5,36 @@ import { celoAlfajores } from 'viem/chains';
 
 @Injectable()
 export class WalletService {
-    private account = privateKeyToAccount(process.env.PRIVATE_KEY as `0x${string}`);
-    private walletClient = createWalletClient({
-        account: this.account,
-        chain: celoAlfajores,
-        transport: http(celoAlfajores.rpcUrls.default.http[0]),
+  private account = privateKeyToAccount(
+    process.env.PRIVATE_KEY as `0x${string}`,
+  );
+  private walletClient = createWalletClient({
+    account: this.account,
+    chain: celoAlfajores,
+    transport: http(celoAlfajores.rpcUrls.default.http[0]),
+  });
+  private publicClient = createPublicClient({
+    chain: celoAlfajores,
+    transport: http(celoAlfajores.rpcUrls.default.http[0]),
+  });
+
+  getAddress() {
+    return this.account.address;
+  }
+
+  async getBalance() {
+    const balance = await this.publicClient.getBalance({
+      address: this.account.address,
     });
-    private publicClient = createPublicClient({
-        chain: celoAlfajores,
-        transport: http(celoAlfajores.rpcUrls.default.http[0]),
+    return balance.toString();
+  }
+
+  async sendTransaction(to: `0x${string}`, amount: string) {
+    const hash = await this.walletClient.sendTransaction({
+      account: this.account,
+      to,
+      value: parseEther(amount),
     });
-
-    getAddress() {
-        return this.account.address;
-    }
-
-    async getBalance() {
-        const balance = await this.publicClient.getBalance({
-            address: this.account.address,
-        });
-        return balance.toString();
-    }
-
-    async sendTransaction(to: `0x${string}`, amount: string) {
-        const hash = await this.walletClient.sendTransaction({
-            account: this.account,
-            to,
-            value: parseEther(amount),
-        });
-        return hash;
-    }
+    return hash;
+  }
 }

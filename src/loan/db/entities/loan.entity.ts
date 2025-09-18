@@ -1,19 +1,16 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  JoinColumn,
-  ManyToOne,
-} from 'typeorm';
+import { Entity, Column, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { BorrowerEntity } from '../../../user/entities/borrower.entity';
 import { LenderEntity } from '../../../user/entities/lender.entity';
 import { LoanStatusEnum } from '../enums/loanStatus.enum';
+import { InstallmentEntity } from './installment.entity';
 
 @Entity('loans')
 export class LoanEntity {
-  //TODO: agg historial de pagos y cuantos pagos se han realizado y cuanto falta por pagar
   @Column('uuid', { primary: true, generated: 'uuid' })
   id: string;
+
+  @Column('int', { nullable: true, unique: true })
+  loanIdBlockchain?: number;
 
   @Column('uuid', { nullable: true })
   lender_id?: string;
@@ -60,6 +57,9 @@ export class LoanEntity {
   @Column('int', { nullable: false })
   months: number;
 
+  @Column('varchar', { nullable: true })
+  tx_hash: string;
+
   @Column({
     type: 'int',
     default: LoanStatusEnum.PENDING,
@@ -70,17 +70,23 @@ export class LoanEntity {
   })
   status: LoanStatusEnum;
 
-  @ManyToOne(() => BorrowerEntity, (borrower) => borrower.id, {
+  @ManyToOne(() => BorrowerEntity, (borrower) => borrower.loans, {
     onDelete: 'CASCADE',
     nullable: false,
   })
   @JoinColumn({ name: 'borrower_id' })
   borrower: BorrowerEntity;
 
-  @ManyToOne(() => LenderEntity, (lender) => lender.id, {
+  @ManyToOne(() => LenderEntity, (lender) => lender.loans, {
     onDelete: 'CASCADE',
     nullable: true,
   })
   @JoinColumn({ name: 'lender_id' })
   lender?: LenderEntity;
+
+  @OneToMany(() => InstallmentEntity, (installment) => installment.loan, {
+    cascade: true,
+    nullable: false,
+  })
+  installments_list: InstallmentEntity[];
 }
