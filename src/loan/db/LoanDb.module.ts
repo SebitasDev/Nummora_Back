@@ -4,10 +4,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoanDbController } from './LoanDb.controller';
 import { LoanBlockchainModule } from '../blockchain/LoanBlockchain.module';
 import { LoanEntity } from './entities/loan.entity';
+import { InstallmentEntity } from './entities/installment.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([LoanEntity]),
+    TypeOrmModule.forFeature([InstallmentEntity]),
     forwardRef(() => LoanBlockchainModule),
   ],
   providers: [LoanDbService],

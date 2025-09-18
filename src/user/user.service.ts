@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { LenderEntity } from './entities/lender.entity';
 import { BorrowerEntity } from './entities/borrower.entity';
-import {UserEntity} from "./entities/user.entity";
+import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UserService {

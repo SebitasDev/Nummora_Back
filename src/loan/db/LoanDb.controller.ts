@@ -13,6 +13,7 @@ import { GenerateLoanDto } from './types/generateLoan.dto';
 import { LoanDbService } from './loanDb.service';
 import { LoanStatusEnum } from './enums/loanStatus.enum';
 import { ApiResponse } from '../../common/interfaces/api-response.interface';
+import { PayInstallmentDto } from './types/payInstallmentDto';
 
 @Controller('loan')
 export class LoanDbController {
@@ -48,7 +49,7 @@ export class LoanDbController {
   }
 
   @Post('generate')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   async generateLoan(
     @Body() payload: GenerateLoanDto,
   ): Promise<ApiResponse<{ txHash: string | null }>> {
@@ -57,7 +58,7 @@ export class LoanDbController {
       return {
         success: true,
         message: result.message,
-        data: { txHash: result.txHash },
+        data: { txHash: result.txHash?.toString() || null },
       };
     } catch (err: unknown) {
       const errorMessage =
@@ -67,6 +68,33 @@ export class LoanDbController {
         <ApiResponse>{
           success: false,
           message: 'Error al generar el préstamo ❌',
+          error: errorMessage,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Post('pay-installment')
+  @HttpCode(HttpStatus.OK)
+  async payInstallment(
+    @Body() payload: PayInstallmentDto,
+  ): Promise<ApiResponse<{ txHash: string | null }>> {
+    try {
+      const result = await this.loanBlockchainService.payInstallment(payload);
+      return {
+        success: true,
+        message: 'Cuota pagada con éxito ✅',
+        data: { txHash: result.toString() || null },
+      };
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Unknown error occurred';
+
+      throw new HttpException(
+        <ApiResponse>{
+          success: false,
+          message: 'Error al pagar la cuota ❌',
           error: errorMessage,
         },
         HttpStatus.BAD_REQUEST,

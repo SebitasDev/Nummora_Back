@@ -2,8 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { Account, privateKeyToAccount } from 'viem/accounts';
 import {
   Address,
+  createPublicClient,
   createWalletClient,
   http,
+  PublicClient,
   Transport,
   WalletClient,
 } from 'viem';
@@ -16,12 +18,19 @@ import { GenerateLoanDto } from '../db/types/generateLoan.dto';
 import { LoanDbService } from '../db/loanDb.service';
 import { toWei } from '../../common/utils/toWei.utility';
 import { calculateInterest } from '../../common/utils/Interest.utility';
+import { decodeTransactionEvent } from '../../common/helpers/decodeTransactionEvent.helper';
+import { LoanStatusEnum } from '../db/enums/loanStatus.enum';
+import { PayInstallmentDto } from '../db/types/payInstallmentDto';
 
 @Injectable()
 export class LoanBlockchainService {
   private readonly account: Account;
   private client: WalletClient<Transport, typeof liskSepolia, Account>;
   private contractAddress = process.env.NUMMORA_CORE_ADDRESS! as `0x${string}`;
+  private publicClient: PublicClient = createPublicClient({
+    chain: liskSepolia,
+    transport: http(liskSepolia.rpcUrls.default.http[0]),
+  }) as unknown as PublicClient;
 
   constructor(
     private readonly userService: UserService,
@@ -49,7 +58,12 @@ export class LoanBlockchainService {
     try {
       const { loanId, lenderAddress } = payload;
 
-      const loan = await this.loanDbService.getLoanById(loanId);
+      const loan = await this.loanDbService.getLoanById(loanId, [
+        'borrower',
+        'borrower.user',
+        'lender',
+        'lender.user',
+      ]);
 
       if (!loan) {
         throw new Error('El préstamo no existe ❌');
@@ -112,20 +126,21 @@ export class LoanBlockchainService {
         throw new Error('El borrower no existe ❌');
       }
 
-      const loan = await this.loanDbService.createLoan(
-        payload.borrowerId,
-        payload.amount,
-        payload.token,
-        payload.installments,
-        payload.description,
-        payload.months,
-      );
-
       const lender = await this.userService.findLenderByAvailableCapital(
         payload.amount,
       );
 
       if (!lender) {
+        await this.loanDbService.createLoan(
+          payload.borrowerId,
+          payload.amount,
+          payload.token,
+          payload.installments,
+          LoanStatusEnum.PENDING,
+          payload.description,
+          payload.months,
+        );
+
         return {
           message:
             'No hay prestamistas con capital disponible en este momento. ' +
@@ -136,24 +151,41 @@ export class LoanBlockchainService {
         };
       }
 
-      await this.loanDbService.updateLoanLender(loan.id, lender.id);
+      const interest = calculateInterest(payload.installments, payload.amount);
 
-      const interest = calculateInterest(loan.installments, loan.amount);
-
-      const txHash = await this.client.writeContract({
+      const txHash: Address = await this.client.writeContract({
         address: this.contractAddress,
         abi: NummoraLoan,
         functionName: 'createLoan',
         args: [
           lender.user.account_address, //Address del lender
           borrower.user.account_address, //Address del borrower
-          loan.token, //Address del token
-          toWei(loan.amount), //Monto prestado
+          payload.token, //Address del token
+          toWei(payload.amount), //Monto prestado
           toWei(interest), //Interés total a pagar
-          BigInt(loan.installments), //Número de cuotas
-          toWei(interest * (25 / 100)), //Interes que se queda la plataforma
+          BigInt(payload.installments), //Número de cuotas
+          toWei(interest * 0.25), //Interes que se queda la plataforma
         ],
       });
+
+      const loanCreateEvent = await decodeTransactionEvent<'LoanCreated'>(
+        this.publicClient,
+        txHash,
+        'event LoanCreated(uint256 loanId, address lender, address borrower, uint256 amount)',
+      );
+
+      const loan = await this.loanDbService.createLoan(
+        payload.borrowerId,
+        payload.amount,
+        payload.token,
+        payload.installments,
+        LoanStatusEnum.ACTIVE,
+        payload.description,
+        payload.months,
+        lender.id,
+        Number(loanCreateEvent[0].args.loanId as bigint),
+        txHash,
+      );
 
       await this.userService.updateLenderCapital(
         lender.user.account_address,
@@ -165,7 +197,61 @@ export class LoanBlockchainService {
         txHash: txHash,
       };
     } catch (e) {
-      throw new Error(JSON.stringify(e, null, 2));
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      throw new Error(e?.message ?? 'Error desconocido');
+    }
+  }
+
+  async payInstallment(payload: PayInstallmentDto) {
+    try {
+      const loan = await this.loanDbService.getLoanById(payload.loanId, [
+        'installments_list',
+      ]);
+
+      if (!loan) throw new Error('El préstamo no existe ❌');
+
+      if (
+        loan.status.toString() !==
+          LoanStatusEnum[LoanStatusEnum.ACTIVE].toString() ||
+        !loan.loanIdBlockchain
+      )
+        throw new Error('El préstamo no está activo ❌');
+
+      const txHash = await this.client.writeContract({
+        address: this.contractAddress,
+        abi: NummoraLoan,
+        functionName: 'payInstallmentWithSignature',
+        args: [
+          BigInt(loan.loanIdBlockchain), //LoanId
+          payload.signature, //Firma del borrower
+        ],
+      });
+
+      const paymentEvent = await decodeTransactionEvent<'PaymentMade'>(
+        this.publicClient,
+        txHash,
+        'event PaymentMade(uint256 loanId, uint256 amount)',
+      );
+
+      if (
+        !paymentEvent.length ||
+        paymentEvent[0].args.loanId !== BigInt(loan.loanIdBlockchain)
+      )
+        throw new Error('No se pudo verificar el pago en la blockchain ❌');
+
+      const installmentIdToPay = loan.installments_list
+        .filter((installment) => !installment.paid) // solo cuotas pendientes
+        .sort(
+          (i1, i2) =>
+            new Date(i1.due_date).getTime() - new Date(i2.due_date).getTime(),
+        )[0].id;
+
+      await this.loanDbService.markInstallmentAsPaid(installmentIdToPay);
+
+      return txHash;
+    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      throw new Error(e?.message ?? 'Error desconocido');
     }
   }
 }
