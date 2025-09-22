@@ -7,11 +7,11 @@ export class UserEntity {
   @Column('uuid', { primary: true, generated: 'uuid' })
   id: string;
 
-  @Column('text', { nullable: false })
-  first_name: string;
+  @Column('varchar', { nullable: false, length: 60 })
+  first_name?: string;
 
-  @Column('text', { nullable: false })
-  last_name: string;
+  @Column('varchar', { nullable: false, length: 60 })
+  last_name?: string;
 
   @Column('text', { nullable: true })
   email: string;

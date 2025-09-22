@@ -34,12 +34,12 @@ export class UserService {
     });
   }
 
-  async findByAddress(address: string, role: 'lender' | 'borrower') {
+  async findByAddress(address: string, relation?: string[]) {
     return await this.userRepo.findOne({
       where: {
         account_address: address,
       },
-      relations: [role == 'borrower' ? 'borrower' : 'lender'],
+      relations: [...(relation || [])],
     });
   }
 
@@ -53,5 +53,34 @@ export class UserService {
     }
     userLender.lender!.available_capital -= loanCapital;
     return await this.lenderRepo.save(userLender.lender!);
+  }
+
+  async createUser(address: string) {
+    const newUser = this.userRepo.create({
+      first_name: 'John',
+      last_name: 'Doe',
+      email: 'JohnDoe@test.com',
+      account_address: address,
+    });
+    return await this.userRepo.save(newUser);
+  }
+
+  async createLender(address: string) {
+    const user = await this.createUser(address);
+    const newLender = this.lenderRepo.create({
+      user: user,
+      available_capital: 0,
+    });
+    return await this.lenderRepo.save(newLender);
+  }
+
+  async createBorrower(address: string) {
+    const user = await this.createUser(address);
+    const newBorrower = this.borrowerRepo.create({
+      user: user,
+      loan_limit: 1000,
+      reputation_score: 500,
+    });
+    return await this.borrowerRepo.save(newBorrower);
   }
 }

@@ -1,16 +1,18 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { LenderEntity } from './entities/lender.entity';
 import { BorrowerEntity } from './entities/borrower.entity';
+import { UserBlockchainModule } from './blockchain/UserBlockchain.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserEntity]),
     TypeOrmModule.forFeature([LenderEntity]),
     TypeOrmModule.forFeature([BorrowerEntity]),
+    forwardRef(() => UserBlockchainModule),
   ],
   providers: [UserService],
   controllers: [UserController],
