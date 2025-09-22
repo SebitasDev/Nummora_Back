@@ -77,7 +77,7 @@ export class LoanBlockchainService {
 
       const userLender = await this.userService.findByAddress(
         payload.lenderAddress,
-        'lender',
+        ['lender'],
       );
 
       if (userLender!.lender!.available_capital < loan.amount) {

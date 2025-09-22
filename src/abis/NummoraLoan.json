@@ -629,19 +629,6 @@
         "internalType": "uint256",
         "name": "loanId",
         "type": "uint256"
-      }
-    ],
-    "name": "payInstallment",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "loanId",
-        "type": "uint256"
       },
       {
         "internalType": "bytes",
@@ -679,15 +666,27 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "registerBorrower",
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "registerBorrowerWithSignature",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "registerLender",
+    "inputs": [
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "registerLenderWithSignature",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

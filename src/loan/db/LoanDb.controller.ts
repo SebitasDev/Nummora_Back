@@ -40,7 +40,7 @@ export class LoanDbController {
       throw new HttpException(
         <ApiResponse>{
           success: false,
-          message: 'Error al generar el préstamo ❌',
+          message: 'Error al financiar el préstamo ❌',
           error: errorMessage,
         },
         HttpStatus.BAD_REQUEST,
