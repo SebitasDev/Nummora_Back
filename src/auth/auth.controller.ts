@@ -40,8 +40,8 @@ export class AuthController {
 
       res.cookie('authToken', access_token, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'none',
         maxAge: 1000 * 60 * 60,
       });
 
