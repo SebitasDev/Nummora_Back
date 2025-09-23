@@ -5,12 +5,14 @@ import { LoanDbController } from './LoanDb.controller';
 import { LoanBlockchainModule } from '../blockchain/LoanBlockchain.module';
 import { LoanEntity } from './entities/loan.entity';
 import { InstallmentEntity } from './entities/installment.entity';
+import { AuthModule } from '../../auth/auth.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([LoanEntity]),
     TypeOrmModule.forFeature([InstallmentEntity]),
     forwardRef(() => LoanBlockchainModule),
+    AuthModule,
   ],
   providers: [LoanDbService],
   controllers: [LoanDbController],
