@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { LoanDbModule } from './loan/db/LoanDb.module';
 import { LoanBlockchainModule } from './loan/blockchain/LoanBlockchain.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { LoanBlockchainModule } from './loan/blockchain/LoanBlockchain.module';
     LoanBlockchainModule,
     UserModule,
     LoanDbModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

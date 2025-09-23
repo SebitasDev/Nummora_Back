@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { LoanBlockchainService } from '../blockchain/LoanBlockchain.service';
 import { CreateLoanDto } from './types/createLoanDto';
@@ -14,8 +15,10 @@ import { LoanDbService } from './loanDb.service';
 import { LoanStatusEnum } from './enums/loanStatus.enum';
 import { ApiResponse } from '../../common/interfaces/api-response.interface';
 import { PayInstallmentDto } from './types/payInstallmentDto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('loan')
+@UseGuards(JwtAuthGuard)
 export class LoanDbController {
   constructor(
     private readonly loanBlockchainService: LoanBlockchainService,

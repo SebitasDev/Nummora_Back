@@ -208,7 +208,7 @@ export class LoanBlockchainService {
         'installments_list',
       ]);
 
-      if (!loan) throw new Error('El préstamo no existe ❌');
+      if (loan == null) throw new Error('El préstamo no existe ❌');
 
       if (
         loan.status.toString() !==
