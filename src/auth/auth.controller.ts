@@ -19,7 +19,6 @@ export class AuthController {
   @Post('login')
   async login(
     @Body() body: LoginDto,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<ApiResponse<{ access_token: string }>> {
     try {
       const user = await this.authService.validateUser(
@@ -37,13 +36,6 @@ export class AuthController {
       }
 
       const access_token = this.authService.login(user).data!.access_token;
-
-      res.cookie('authToken', access_token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'none',
-        maxAge: 1000 * 60 * 60,
-      });
 
       return {
         success: true,
