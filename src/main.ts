@@ -13,9 +13,9 @@ async function bootstrap() {
       'https://nummora-front.vercel.app',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
+    //credentials: true,
   });
-  
+
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
 
   await app.listen(process.env.PORT ?? 3001);
