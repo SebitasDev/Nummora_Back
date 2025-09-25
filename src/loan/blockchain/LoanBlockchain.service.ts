@@ -9,7 +9,7 @@ import {
   Transport,
   WalletClient,
 } from 'viem';
-import { liskSepolia } from 'viem/chains';
+import { celo } from 'viem/chains';
 import { validateHash } from '../../common/utils/hash.utility';
 import { NummoraLoan } from '../../abis';
 import { CreateLoanDto } from '../db/types/createLoanDto';
@@ -25,11 +25,11 @@ import { PayInstallmentDto } from '../db/types/payInstallmentDto';
 @Injectable()
 export class LoanBlockchainService {
   private readonly account: Account;
-  private client: WalletClient<Transport, typeof liskSepolia, Account>;
+  private client: WalletClient<Transport, typeof celo, Account>;
   private contractAddress = process.env.NUMMORA_CORE_ADDRESS! as `0x${string}`;
   private publicClient: PublicClient = createPublicClient({
-    chain: liskSepolia,
-    transport: http(liskSepolia.rpcUrls.default.http[0]),
+    chain: celo,
+    transport: http(celo.rpcUrls.default.http[0]),
   }) as unknown as PublicClient;
 
   constructor(
@@ -41,8 +41,8 @@ export class LoanBlockchainService {
     );
     this.client = createWalletClient({
       account: this.account,
-      chain: liskSepolia,
-      transport: http(liskSepolia.rpcUrls.default.http[0]),
+      chain: celo,
+      transport: http(celo.rpcUrls.default.http[0]),
     });
   }
 

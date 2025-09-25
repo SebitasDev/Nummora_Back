@@ -8,7 +8,7 @@ import {
   recoverMessageAddress,
 } from 'viem';
 import { NummoraLoan } from '../abis';
-import { liskSepolia } from 'viem/chains';
+import { celo } from 'viem/chains';
 import { Account } from 'viem/accounts';
 import { UserService } from '../user/user.service';
 import { ApiResponse } from '../common/interfaces/api-response.interface';
@@ -25,8 +25,8 @@ export class AuthService {
   private contractAddress = process.env.NUMMORA_CORE_ADDRESS! as `0x${string}`;
   private readonly account: Account;
   private publicClient: PublicClient = createPublicClient({
-    chain: liskSepolia,
-    transport: http(liskSepolia.rpcUrls.default.http[0]),
+    chain: celo,
+    transport: http(celo.rpcUrls.default.http[0]),
   }) as unknown as PublicClient;
 
   constructor(
