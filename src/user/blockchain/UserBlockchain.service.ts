@@ -38,7 +38,6 @@ export class UserBlockchainService {
 
   async registerLender(address: Address, signature: `0x${string}`) {
     try {
-      console.log(this.contractAddress, this.client);
       const findLenderBlockchain = (await this.publicClient.readContract({
         address: this.contractAddress,
         abi: NummoraLoan,
@@ -55,6 +54,12 @@ export class UserBlockchainService {
         consumer: process.env.DIVVI_CONSUMER as `0x${string}`,
       });
 
+      console.log(`Referral tag: 0x${referralTag}`);
+
+      console.log(`Registering lender ${address} on blockchain...`);
+
+      console.log('signature', signature);
+
       const txHash = await this.client.writeContract({
         address: this.contractAddress,
         abi: NummoraLoan,
@@ -62,6 +67,8 @@ export class UserBlockchainService {
         args: [signature],
         dataSuffix: `0x${referralTag}`,
       });
+
+      console.log(txHash);
 
       const chainId = celo.id;
 
