@@ -52,6 +52,8 @@ export class AuthService {
         args: [address],
       })) as boolean;
 
+      console.log('User role verified:', findUser);
+
       if (findUser) {
         const user = await this.userService.findByAddress(address, [
           userRole === 0 ? 'borrower' : 'lender',
