@@ -38,6 +38,7 @@ export class UserBlockchainService {
 
   async registerLender(address: Address, signature: `0x${string}`) {
     try {
+      console.log(this.contractAddress, this.client);
       const findLenderBlockchain = (await this.publicClient.readContract({
         address: this.contractAddress,
         abi: NummoraLoan,
@@ -77,8 +78,9 @@ export class UserBlockchainService {
         throw new Error('Lender not registered on blockchain');
       }
 
-      console.log(lenderRegisterEvent[0].args.lender as Address);
-      await this.userService.createLender(address);
+      await this.userService.createLender(
+        lenderRegisterEvent[0].args.lender as Address,
+      );
 
       return { txHash: txHash, message: 'Usuario registrado como lender ✅' };
     } catch (e) {
