@@ -63,9 +63,9 @@ export class UserBlockchainService {
       });
 
       const chainId = celo.id;
-      
+
       await submitReferral({ txHash, chainId });
-      
+
       const lenderRegisterEvent =
         await decodeTransactionEvent<'LenderRegistered'>(
           this.publicClient,
@@ -77,9 +77,8 @@ export class UserBlockchainService {
         throw new Error('Lender not registered on blockchain');
       }
 
-      await this.userService.createLender(
-        lenderRegisterEvent[0].args.lender as Address,
-      );
+      console.log(lenderRegisterEvent[0].args.lender as Address);
+      await this.userService.createLender(address);
 
       return { txHash: txHash, message: 'Usuario registrado como lender ✅' };
     } catch (e) {

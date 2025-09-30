@@ -20,6 +20,7 @@ export class UserController {
     @Body() payload: CreateUserDto,
   ): Promise<ApiResponse<{ txHash: string | null }>> {
     try {
+      console.log(payload.userAddress);
       const result = await this.userBlockchainService.registerLender(
         payload.userAddress,
         payload.signature,

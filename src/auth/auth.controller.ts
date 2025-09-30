@@ -21,6 +21,7 @@ export class AuthController {
     @Body() body: LoginDto,
   ): Promise<ApiResponse<{ access_token: string }>> {
     try {
+      console.log(body);
       const user = await this.authService.validateUser(
         body.userAddress,
         body.signature,
