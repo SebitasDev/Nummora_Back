@@ -54,12 +54,6 @@ export class UserBlockchainService {
         consumer: process.env.DIVVI_CONSUMER as `0x${string}`,
       });
 
-      console.log(`Referral tag: 0x${referralTag}`);
-
-      console.log(`Registering lender ${address} on blockchain...`);
-
-      console.log('signature', signature);
-
       const txHash = await this.client.writeContract({
         address: this.contractAddress,
         abi: NummoraLoan,
@@ -68,11 +62,7 @@ export class UserBlockchainService {
         dataSuffix: `0x${referralTag}`,
       });
 
-      console.log(txHash);
-
-      const chainId = celo.id;
-
-      await submitReferral({ txHash, chainId });
+      await submitReferral({ txHash, chainId: celo.id });
 
       const lenderRegisterEvent =
         await decodeTransactionEvent<'LenderRegistered'>(
@@ -109,12 +99,20 @@ export class UserBlockchainService {
         throw new Error('User already registered as borrower');
       }
 
+      const referralTag = getReferralTag({
+        user: this.client.account.address,
+        consumer: process.env.DIVVI_CONSUMER as `0x${string}`,
+      });
+
       const txHash = await this.client.writeContract({
         address: this.contractAddress,
         abi: NummoraLoan,
         functionName: 'registerBorrowerWithSignature',
         args: [signature],
+        dataSuffix: `0x${referralTag}`,
       });
+
+      await submitReferral({ txHash, chainId: celo.id });
 
       const BorrowerRegisterEvent =
         await decodeTransactionEvent<'BorrowerRegistered'>(
