@@ -79,6 +79,8 @@ export class UserBlockchainService {
         lenderRegisterEvent[0].args.lender as Address,
       );
 
+      console.log(lenderRegisterEvent[0].args.lender as Address);
+
       return { txHash: txHash, message: 'Usuario registrado como lender ✅' };
     } catch (e) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
