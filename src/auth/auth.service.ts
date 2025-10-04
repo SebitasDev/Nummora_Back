@@ -12,6 +12,7 @@ import { celo } from 'viem/chains';
 import { Account } from 'viem/accounts';
 import { UserService } from '../user/user.service';
 import { ApiResponse } from '../common/interfaces/api-response.interface';
+import { ConfigService } from '@nestjs/config';
 
 interface jwtPayload {
   sub: string;
@@ -22,17 +23,22 @@ interface jwtPayload {
 
 @Injectable()
 export class AuthService {
-  private contractAddress = process.env.NUMMORA_CORE_ADDRESS! as `0x${string}`;
   private readonly account: Account;
   private publicClient: PublicClient = createPublicClient({
     chain: celo,
     transport: http(celo.rpcUrls.default.http[0]),
   }) as unknown as PublicClient;
+  private readonly NUMMORA_CORE_ADDRESS: Address;
 
   constructor(
     private jwtService: JwtService,
     private readonly userService: UserService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.NUMMORA_CORE_ADDRESS = this.configService.get<Address>(
+      'nummoraCoreAddress',
+    ) as Address;
+  }
 
   async validateUser(
     address: Address,
@@ -46,7 +52,7 @@ export class AuthService {
 
     if (recovered.toLowerCase() === address.toLowerCase()) {
       const findUser = (await this.publicClient.readContract({
-        address: this.contractAddress,
+        address: this.NUMMORA_CORE_ADDRESS,
         abi: NummoraLoan,
         functionName: userRole === 0 ? 'isBorrower' : 'isLender',
         args: [address],

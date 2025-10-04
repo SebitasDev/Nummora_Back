@@ -14,21 +14,39 @@ import { UserService } from '../user.service';
 import { NummoraLoan } from '../../abis';
 import { decodeTransactionEvent } from '../../common/helpers/decodeTransactionEvent.helper';
 import { getReferralTag, submitReferral } from '@divvi/referral-sdk';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserBlockchainService {
   private readonly account: Account;
   private client: WalletClient<Transport, typeof celo, Account>;
-  private contractAddress = process.env.NUMMORA_CORE_ADDRESS! as `0x${string}`;
   private publicClient: PublicClient = createPublicClient({
     chain: celo,
     transport: http(celo.rpcUrls.default.http[0]),
   }) as unknown as PublicClient;
+  private readonly NUMMORA_CORE_ADDRESS: Address;
+  private readonly DIVVI_CONSUMER: Address;
 
-  constructor(private readonly userService: UserService) {
+  constructor(
+    private readonly userService: UserService,
+    private readonly configService: ConfigService,
+  ) {
+    const GAS_SUPPLIER_PRIVATE_KEY = this.configService.get<string>(
+      'gasSupplierPrivateKey',
+    )!;
+
     this.account = privateKeyToAccount(
-      process.env.PRIVATE_KEY as `0x${string}`,
+      GAS_SUPPLIER_PRIVATE_KEY as `0x${string}`,
     );
+
+    this.NUMMORA_CORE_ADDRESS = this.configService.get<Address>(
+      'nummoraCoreAddress',
+    ) as Address;
+
+    this.NUMMORA_CORE_ADDRESS = this.configService.get<Address>(
+      'divviConsumer',
+    ) as Address;
+
     this.client = createWalletClient({
       account: this.account,
       chain: celo,
@@ -39,7 +57,7 @@ export class UserBlockchainService {
   async registerLender(address: Address, signature: `0x${string}`) {
     try {
       const findLenderBlockchain = (await this.publicClient.readContract({
-        address: this.contractAddress,
+        address: this.NUMMORA_CORE_ADDRESS,
         abi: NummoraLoan,
         functionName: 'isLender',
         args: [address],
@@ -51,11 +69,11 @@ export class UserBlockchainService {
 
       const referralTag = getReferralTag({
         user: this.client.account.address,
-        consumer: process.env.DIVVI_CONSUMER as `0x${string}`,
+        consumer: this.DIVVI_CONSUMER,
       });
 
       const txHash = await this.client.writeContract({
-        address: this.contractAddress,
+        address: this.NUMMORA_CORE_ADDRESS,
         abi: NummoraLoan,
         functionName: 'registerLenderWithSignature',
         args: [signature],
@@ -91,7 +109,7 @@ export class UserBlockchainService {
   async registerBorrower(address: Address, signature: `0x${string}`) {
     try {
       const findBorrowerBlockchain = (await this.publicClient.readContract({
-        address: this.contractAddress,
+        address: this.NUMMORA_CORE_ADDRESS,
         abi: NummoraLoan,
         functionName: 'isBorrower',
         args: [address],
@@ -103,11 +121,11 @@ export class UserBlockchainService {
 
       const referralTag = getReferralTag({
         user: this.client.account.address,
-        consumer: process.env.DIVVI_CONSUMER as `0x${string}`,
+        consumer: this.DIVVI_CONSUMER,
       });
 
       const txHash = await this.client.writeContract({
-        address: this.contractAddress,
+        address: this.NUMMORA_CORE_ADDRESS,
         abi: NummoraLoan,
         functionName: 'registerBorrowerWithSignature',
         args: [signature],

@@ -21,24 +21,35 @@ import { calculateInterest } from '../../common/utils/Interest.utility';
 import { decodeTransactionEvent } from '../../common/helpers/decodeTransactionEvent.helper';
 import { LoanStatusEnum } from '../db/enums/loanStatus.enum';
 import { PayInstallmentDto } from '../db/types/payInstallmentDto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class LoanBlockchainService {
   private readonly account: Account;
   private client: WalletClient<Transport, typeof celo, Account>;
-  private contractAddress = process.env.NUMMORA_CORE_ADDRESS! as `0x${string}`;
   private publicClient: PublicClient = createPublicClient({
     chain: celo,
     transport: http(celo.rpcUrls.default.http[0]),
   }) as unknown as PublicClient;
+  private readonly NUMMORA_CORE_ADDRESS: Address;
 
   constructor(
     private readonly userService: UserService,
     private readonly loanDbService: LoanDbService,
+    private readonly configService: ConfigService,
   ) {
+    const GAS_SUPPLIER_PRIVATE_KEY = this.configService.get<string>(
+      'gasSupplierPrivateKey',
+    )!;
+
+    this.NUMMORA_CORE_ADDRESS = this.configService.get<Address>(
+      'nummoraCoreAddress',
+    ) as Address;
+
     this.account = privateKeyToAccount(
-      process.env.PRIVATE_KEY as `0x${string}`,
+      GAS_SUPPLIER_PRIVATE_KEY as `0x${string}`,
     );
+
     this.client = createWalletClient({
       account: this.account,
       chain: celo,
@@ -89,7 +100,7 @@ export class LoanBlockchainService {
       const interest = calculateInterest(loan.installments, loan.amount);
 
       const txHash = await this.client.writeContract({
-        address: this.contractAddress,
+        address: this.NUMMORA_CORE_ADDRESS,
         abi: NummoraLoan,
         functionName: 'createLoan',
         args: [
@@ -154,7 +165,7 @@ export class LoanBlockchainService {
       const interest = calculateInterest(payload.installments, payload.amount);
 
       const txHash: Address = await this.client.writeContract({
-        address: this.contractAddress,
+        address: this.NUMMORA_CORE_ADDRESS,
         abi: NummoraLoan,
         functionName: 'createLoan',
         args: [
@@ -218,7 +229,7 @@ export class LoanBlockchainService {
         throw new Error('El préstamo no está activo ❌');
 
       const txHash = await this.client.writeContract({
-        address: this.contractAddress,
+        address: this.NUMMORA_CORE_ADDRESS,
         abi: NummoraLoan,
         functionName: 'payInstallmentWithSignature',
         args: [

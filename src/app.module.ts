@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { WalletModule } from './wallet/wallet.module';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { LoanDbModule } from './loan/db/LoanDb.module';
 import { LoanBlockchainModule } from './loan/blockchain/LoanBlockchain.module';
 import { AuthModule } from './auth/auth.module';
+import appConfig from './config/app.config';
 
 @Module({
   imports: [
@@ -20,10 +20,12 @@ import { AuthModule } from './auth/auth.module';
         rejectUnauthorized: false,
       },
     }),
+
     ConfigModule.forRoot({
       isGlobal: true,
+      load: [appConfig],
     }),
-    WalletModule,
+
     LoanBlockchainModule,
     UserModule,
     LoanDbModule,
