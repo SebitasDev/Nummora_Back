@@ -9,10 +9,10 @@ import {
 } from 'viem';
 import { NummoraLoan } from '../abis';
 import { celo } from 'viem/chains';
-import { Account } from 'viem/accounts';
 import { UserService } from '../user/user.service';
 import { ApiResponse } from '../common/interfaces/api-response.interface';
 import { ConfigService } from '@nestjs/config';
+import { ChainFactory } from '../config/chain.config';
 
 interface jwtPayload {
   sub: string;
@@ -23,11 +23,7 @@ interface jwtPayload {
 
 @Injectable()
 export class AuthService {
-  private readonly account: Account;
-  private publicClient: PublicClient = createPublicClient({
-    chain: celo,
-    transport: http(celo.rpcUrls.default.http[0]),
-  }) as unknown as PublicClient;
+  private readonly publicClient: PublicClient;
   private readonly NUMMORA_CORE_ADDRESS: Address;
 
   constructor(
@@ -35,6 +31,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly configService: ConfigService,
   ) {
+    this.publicClient = ChainFactory.createPublicClient(this.configService);
     this.NUMMORA_CORE_ADDRESS = this.configService.get<Address>(
       'nummoraCoreAddress',
     ) as Address;

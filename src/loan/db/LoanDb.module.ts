@@ -6,6 +6,7 @@ import { LoanBlockchainModule } from '../blockchain/LoanBlockchain.module';
 import { LoanEntity } from './entities/loan.entity';
 import { InstallmentEntity } from './entities/installment.entity';
 import { AuthModule } from '../../auth/auth.module';
+import { ChainFactory } from '../../config/chain.config';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { AuthModule } from '../../auth/auth.module';
     forwardRef(() => LoanBlockchainModule),
     AuthModule,
   ],
-  providers: [LoanDbService],
+  providers: [LoanDbService, ChainFactory],
   controllers: [LoanDbController],
   exports: [LoanDbService, TypeOrmModule],
 })

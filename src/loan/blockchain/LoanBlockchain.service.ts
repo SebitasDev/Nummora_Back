@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Account, privateKeyToAccount } from 'viem/accounts';
 import {
-  Address,
-  createPublicClient,
+  Address, Chain,
   createWalletClient,
   http,
-  PublicClient,
-  Transport,
+  PublicClient, Transport,
   WalletClient,
 } from 'viem';
 import { celo } from 'viem/chains';
@@ -22,22 +20,25 @@ import { decodeTransactionEvent } from '../../common/helpers/decodeTransactionEv
 import { LoanStatusEnum } from '../db/enums/loanStatus.enum';
 import { PayInstallmentDto } from '../db/types/payInstallmentDto';
 import { ConfigService } from '@nestjs/config';
+import { ChainFactory } from '../../config/chain.config';
 
 @Injectable()
 export class LoanBlockchainService {
   private readonly account: Account;
   private client: WalletClient<Transport, typeof celo, Account>;
-  private publicClient: PublicClient = createPublicClient({
-    chain: celo,
-    transport: http(celo.rpcUrls.default.http[0]),
-  }) as unknown as PublicClient;
+  private readonly client: WalletClient<Transport, Chain>;
+  private readonly publicClient: PublicClient;
   private readonly NUMMORA_CORE_ADDRESS: Address;
 
   constructor(
     private readonly userService: UserService,
     private readonly loanDbService: LoanDbService,
     private readonly configService: ConfigService,
+    private readonly chainFactory: ChainFactory,
   ) {
+    this.publicClient = this.chainFactory.createPublicClient();
+    this.client = this.chainFactory.createWalletClient();
+
     const GAS_SUPPLIER_PRIVATE_KEY = this.configService.get<string>(
       'gasSupplierPrivateKey',
     )!;
