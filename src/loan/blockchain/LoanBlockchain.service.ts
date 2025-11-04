@@ -118,11 +118,12 @@ export class LoanBlockchainService {
     payload: GenerateLoanDto,
   ): Promise<{ message: string; txHash: Address | null }> {
     try {
-      const borrower = await this.userService.findBorrowerById(
-        payload.borrowerId,
+      const user = await this.userService.findByAddress(
+        payload.borrowerAddress,
+        ['borrower'],
       );
 
-      if (!borrower) {
+      if (!user?.borrower) {
         throw new Error('El borrower no existe ❌');
       }
 
@@ -132,7 +133,7 @@ export class LoanBlockchainService {
 
       if (!lender) {
         await this.loanDbService.createLoan(
-          payload.borrowerId,
+          user.borrower.id,
           payload.amount,
           payload.token,
           payload.installments,
@@ -159,7 +160,7 @@ export class LoanBlockchainService {
         functionName: 'createLoan',
         args: [
           lender.user.account_address, //Address del lender
-          borrower.user.account_address, //Address del borrower
+          user.account_address, //Address del borrower
           payload.token, //Address del token
           toWei(payload.amount), //Monto prestado
           toWei(interest), //Interés total a pagar
@@ -175,7 +176,7 @@ export class LoanBlockchainService {
       );
 
       const loan = await this.loanDbService.createLoan(
-        payload.borrowerId,
+        user.borrower.id,
         payload.amount,
         payload.token,
         payload.installments,

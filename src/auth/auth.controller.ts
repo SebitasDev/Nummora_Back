@@ -1,16 +1,8 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Request,
-  Res,
-} from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import { LoginDto } from './types/LoginDto';
 import { ApiResponse } from '../common/interfaces/api-response.interface';
-import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {

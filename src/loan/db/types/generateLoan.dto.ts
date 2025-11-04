@@ -1,7 +1,8 @@
 import { Type } from 'class-transformer';
+import { Address } from 'viem';
 
 export class GenerateLoanDto {
-  borrowerId: string;
+  borrowerAddress: Address;
 
   @Type(() => Number)
   amount: number;

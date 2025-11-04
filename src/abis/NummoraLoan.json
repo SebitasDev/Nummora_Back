@@ -289,9 +289,19 @@
         "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
       }
     ],
-    "name": "deposit",
+    "name": "depositWithSignature",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

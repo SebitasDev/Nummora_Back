@@ -83,4 +83,17 @@ export class UserService {
     });
     return await this.borrowerRepo.save(newBorrower);
   }
+
+  async updateIncreaseLenderCapital(address: string, amountToIncrease: number) {
+    const userLender = await this.userRepo.findOne({
+      where: { account_address: address },
+      relations: ['lender'],
+    });
+    if (!userLender) {
+      throw new Error('Lender not found');
+    }
+    userLender.lender!.available_capital += amountToIncrease;
+    const user = await this.lenderRepo.save(userLender.lender!);
+    return user.available_capital;
+  }
 }

@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { LoanDbModule } from './loan/db/LoanDb.module';
 import { LoanBlockchainModule } from './loan/blockchain/LoanBlockchain.module';
 import { AuthModule } from './auth/auth.module';
+import { InvestmentModule } from './investment/investment.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AuthModule } from './auth/auth.module';
     UserModule,
     LoanDbModule,
     AuthModule,
+    InvestmentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
