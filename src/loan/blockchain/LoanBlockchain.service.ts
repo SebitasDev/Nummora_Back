@@ -21,6 +21,7 @@ import { calculateInterest } from '../../common/utils/Interest.utility';
 import { decodeTransactionEvent } from '../../common/helpers/decodeTransactionEvent.helper';
 import { LoanStatusEnum } from '../db/enums/loanStatus.enum';
 import { PayInstallmentDto } from '../db/types/payInstallmentDto';
+import { GetPendingLoanDto } from '../db/types/getPendingLoanDto';
 
 @Injectable()
 export class LoanBlockchainService {
@@ -103,13 +104,23 @@ export class LoanBlockchainService {
         ],
       });
 
+      const loanCreateEvent = await decodeTransactionEvent<'LoanCreated'>(
+        this.publicClient,
+        txHash,
+        'event LoanCreated(uint256 loanId, address lender, address borrower, uint256 amount)',
+      );
+
       await this.loanDbService.updateLoanLender(
         loan.id,
         userLender!.lender!.id,
+        Number(loanCreateEvent[0].args.loanId as bigint),
+        txHash,
       );
+
       await this.userService.updateLenderCapital(lenderAddress, loan.amount);
       return txHash;
     } catch (e) {
+      console.log(e);
       throw new Error(JSON.stringify(e, null, 2));
     }
   }
@@ -250,6 +261,17 @@ export class LoanBlockchainService {
       await this.loanDbService.markInstallmentAsPaid(installmentIdToPay);
 
       return txHash;
+    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      throw new Error(e?.message ?? 'Error desconocido');
+    }
+  }
+
+  async getPendingLoan(payload: GetPendingLoanDto) {
+    try {
+      return await this.loanDbService.getLoanByAddress(payload.userAddress, [
+        'installments_list',
+      ]);
     } catch (e) {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       throw new Error(e?.message ?? 'Error desconocido');

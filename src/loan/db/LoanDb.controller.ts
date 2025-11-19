@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { LoanStatusEnum } from './enums/loanStatus.enum';
 import { ApiResponse } from '../../common/interfaces/api-response.interface';
 import { PayInstallmentDto } from './types/payInstallmentDto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { LoanEntity } from './entities/loan.entity';
 
 @Controller('loan')
 @UseGuards(JwtAuthGuard)
@@ -123,6 +125,34 @@ export class LoanDbController {
         <ApiResponse>{
           success: false,
           message: 'Error al generar el préstamo ❌',
+          error: errorMessage,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Get('borrower-pending/:borrowerAddress')
+  async getPendingLoan(
+    @Param('borrowerAddress') borrowerAddress: `0x${string}`,
+  ): Promise<ApiResponse<LoanEntity | null>> {
+    try {
+      const loan = await this.loanBlockchainService.getPendingLoan({
+        userAddress: borrowerAddress,
+      });
+      return {
+        success: true,
+        message: '✅',
+        data: loan,
+      };
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Unknown error occurred';
+
+      throw new HttpException(
+        <ApiResponse>{
+          success: false,
+          message: 'Error al obtener ❌',
           error: errorMessage,
         },
         HttpStatus.BAD_REQUEST,

@@ -83,12 +83,19 @@ export class LoanDbService {
     });
   }
 
-  async updateLoanLender(loanId: string, lenderId: string) {
+  async updateLoanLender(
+    loanId: string,
+    lenderId: string,
+    loanIdBlockchain: number,
+    tx_hash: Address,
+  ) {
     return await this.loanRepo.update(
       { id: loanId },
       {
         lender: { id: lenderId } as LenderEntity,
         status: LoanStatusEnum.ACTIVE,
+        loanIdBlockchain: loanIdBlockchain,
+        tx_hash: tx_hash,
       },
     );
   }
@@ -101,6 +108,19 @@ export class LoanDbService {
     return this.loanRepo.findOne({
       where: { id },
       relations,
+    });
+  }
+
+  async getLoanByAddress(borrowerAddress: Address, relations: string[] = []) {
+    return this.loanRepo.findOne({
+      where: {
+        borrower: { user: { account_address: borrowerAddress } },
+        status: LoanStatusEnum.ACTIVE,
+      },
+      relations,
+      order: {
+        loanIdBlockchain: 'DESC',
+      },
     });
   }
 
